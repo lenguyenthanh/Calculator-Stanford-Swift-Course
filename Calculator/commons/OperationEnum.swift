@@ -13,7 +13,37 @@ enum OperatorEnum: String {
   case Subtraction = "−"
   case Mutiplication = "×"
   case Division = "÷"
+  
   case Sqrt = "√"
+  case CubeRoot = "∛"
   case Sin = "Sin"
   case Cos = "Cos"
+  case Tan = "Tan"
+  case Square = "x²"
+  case Cube = "x³"
+  
+  func display(operand1: String, operand2: String) -> String?{
+    switch self{
+    case .Subtraction, .Addition:
+      return "(" + operand2 + " " + rawValue +  " " + operand1 + ")"
+    case .Division,  .Mutiplication:
+      return operand2 + " " + rawValue +  " " + operand1
+    default:
+      return nil
+    }
+  }
+  
+  func display(operand: String) -> String?{
+    switch self{
+    case .Sqrt, .Cube, .Sin, .Cos, .Tan:
+      return rawValue + "(" + operand + ")"
+    case .Square:
+      return operand + "²"
+    case .Cube:
+      return operand + "³"
+    default:
+      return nil
+    }
+  }
+  
 }

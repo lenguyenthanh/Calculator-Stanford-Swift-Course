@@ -11,14 +11,19 @@ import UIKit
 class ViewController: UIViewController {
   
   @IBOutlet weak var display: UILabel!
+  @IBOutlet weak var history: UILabel!
   
-  var userIsInTheMiddleOfTypingNumber: Bool = false
+  var userIsInTheMiddleOfTypingNumber = false
+  var isPi = false
   let brain = CalculatorBrain()
   
   @IBAction func appendDigit(sender: UIButton) {
     let digit = sender.currentTitle!
     println("digit = \(digit)")
-    
+    if isPi{
+      isPi = false
+      enter()
+    }
     if !userIsInTheMiddleOfTypingNumber{
       display.text = digit
       userIsInTheMiddleOfTypingNumber = true
@@ -27,13 +32,21 @@ class ViewController: UIViewController {
     }
   }
   
-  private func validate(digit: String){
-    
+  @IBAction func addDot() {
+    if !userIsInTheMiddleOfTypingNumber{
+      display.text = "0."
+      userIsInTheMiddleOfTypingNumber = true
+    }else{
+      let temp = display.text! + "."
+      if let value = getNumberFromString(temp){
+        display.text = temp
+      }
+    }
   }
   
   @IBAction func operate(sender: UIButton) {
     let operation = sender.currentTitle!
-    if userIsInTheMiddleOfTypingNumber{
+    if userIsInTheMiddleOfTypingNumber || isPi{
       enter()
     }
     if let operation = sender.currentTitle{
@@ -43,45 +56,68 @@ class ViewController: UIViewController {
   
   private func operate(operation: String){
     let operatorEnum = OperatorEnum(rawValue: operation)
-    if let result = brain.pushOperator(operatorEnum){
+    let response = brain.pushOperator(operatorEnum)
+    display(response)
+  }
+  
+  private func display(response: CalculatorBrain.Response){
+    if let result = response.result{
       displayValue = result
+      history.text = response.history!
     }else{
       displayValue = nil
     }
   }
   
+  @IBAction func addPi() {
+    if userIsInTheMiddleOfTypingNumber{
+      enter()
+    }
+    displayValue = M_PI
+    isPi = true
+  }
+  
+  
   @IBAction func clear() {
     displayValue = 0
+    history.text = "0"
+    refrestEnterState()
     brain.refresh()
   }
   
   @IBAction func enter() {
-    userIsInTheMiddleOfTypingNumber = false
+    refrestEnterState()
     if let value = displayValue{
-      if let result = brain.pushOperand(value){
-        displayValue = result
-      }else{
-        displayValue = nil
-      }
+      let response = brain.pushOperand(value)
+      display(response)
     }
+  }
+  
+  private func refrestEnterState(){
+    userIsInTheMiddleOfTypingNumber = false
+    isPi = false
   }
   
   var displayValue: Double?{
     get{
-      if let number = NSNumberFormatter().numberFromString(display.text!){
-        return number.doubleValue
-      }else{
-        return nil
-      }
+      return getNumberFromString(display.text!)
     }
     set{
       if let value = newValue{
         display.text = "\(value)"
       }else{
+        clear()
         display.text = "Cannot calculate"
-        brain.refresh()
       }
       userIsInTheMiddleOfTypingNumber = false
+    }
+  }
+  
+  private func getNumberFromString(string: String) -> Double?{
+    if let number = NSNumberFormatter().numberFromString(string){
+      return number.doubleValue
+    }else{
+      return nil
     }
   }
 }

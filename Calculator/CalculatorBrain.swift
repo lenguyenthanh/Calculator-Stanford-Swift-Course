@@ -8,6 +8,12 @@
 
 import Foundation
 
+extension Double {
+  func format(f: String) -> String {
+    return NSString(format: "%\(f)g", self)
+  }
+}
+
 class CalculatorBrain {
   
   // MARK Op definition
@@ -40,6 +46,8 @@ class CalculatorBrain {
         }
       }
     }
+    
+    
   }
   
   private var opStack = [Op]()
@@ -62,46 +70,51 @@ class CalculatorBrain {
     addKnownOp(Op.BinaryOperator(OperatorEnum.Division) {$1 / $0})
     addKnownOp(Op.UnaryOperator(OperatorEnum.Sqrt, sqrt))
     addKnownOp(Op.UnaryOperator(OperatorEnum.Sin, sin))
+    addKnownOp(Op.UnaryOperator(OperatorEnum.Cos, cos))
+    addKnownOp(Op.UnaryOperator(OperatorEnum.Tan, tan))
+    addKnownOp(Op.UnaryOperator(OperatorEnum.Cube) {pow($0, 3)})
+    addKnownOp(Op.UnaryOperator(OperatorEnum.Square) {pow($0, 2)})
+    addKnownOp(Op.UnaryOperator(OperatorEnum.CubeRoot) {pow($0, 1/3)})
     return ops
   }
   
-  private typealias Response = (result: Double?,remaining: [Op])
-  
-  private func evaluate(ops: [Op]) ->Response{
+  private func evaluate(ops: [Op]) -> (result: Double?,remaining: [Op], display: String?){
     if let op = ops.last{
       let remainingOps = ArrayUtil.removeLast(ops)
       switch op {
       case Op.Operand(let value):
-        return (value, remainingOps)
-      case Op.UnaryOperator(_, let operation):
+        return (value, remainingOps, value.format(".3"))
+      case Op.UnaryOperator(let name, let operation):
         let opEvaluation = evaluate(remainingOps)
         if let operand = opEvaluation.result{
-          return (operation(operand), opEvaluation.remaining)
+          return (operation(operand), opEvaluation.remaining, name.display(opEvaluation.display!)!)
         }
-      case Op.BinaryOperator(_, let operation):
+      case Op.BinaryOperator(let name, let operation):
         let opEvaluation1 = evaluate(remainingOps)
         if let op1 = opEvaluation1.result{
           let opEvaluation2 = evaluate(opEvaluation1.remaining)
           if let op2 = opEvaluation2.result{
-            return (operation(op1, op2), opEvaluation2.remaining)
+            return (operation(op1, op2), opEvaluation2.remaining, name.display(opEvaluation1.display!, operand2: opEvaluation2.display!)!)
           }
         }
       }
     }
-    return (nil, ops)
+    return (nil, ops, nil)
   }
   
-  private func evaluate() -> Double?{
-    let (result, _) = evaluate(opStack)
-    return result
+  typealias Response = (result: Double?, history: String?)
+  
+  private func evaluate() -> Response{
+    let (result, _, display) = evaluate(opStack)
+    return (result, display)
   }
   
-  func pushOperand(value: Double) -> Double?{
+  func pushOperand(value: Double) -> Response{
     opStack.append(Op.Operand(value))
     return evaluate()
   }
   
-  func pushOperator(value: OperatorEnum?) ->Double?{
+  func pushOperator(value: OperatorEnum?) -> Response{
     if let op = knownOps[value!]{
       opStack.append(op)
     }
