@@ -35,7 +35,7 @@ enum OperatorEnum: String {
   
   func display(operand: String) -> String?{
     switch self{
-    case .Sqrt, .Cube, .Sin, .Cos, .Tan:
+    case .Sqrt, .Sin, .Cos, .Tan, .CubeRoot:
       return rawValue + "(" + operand + ")"
     case .Square:
       return operand + "²"
