@@ -107,7 +107,7 @@ class ViewController: UIViewController {
         display.text = "\(value)"
       }else{
         clear()
-        display.text = "Cannot calculate"
+        display.text = "Error"
       }
       userIsInTheMiddleOfTypingNumber = false
     }
